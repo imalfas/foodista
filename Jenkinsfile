@@ -65,48 +65,48 @@ pipeline {
             }
         }
 
-        stage('Update Manifest Repo') {
-            steps {
-                dir('manifest-workspace') {
+       stage('Update Manifest Repo') {
+    steps {
+        dir('manifest-workspace') {
 
-                    checkout([
-                        $class: 'GitSCM',
-                        branches: [[name: "*/${MANIFEST_BRANCH}"]],
-                        userRemoteConfigs: [[
-                            credentialsId: "${GIT_CREDENTIALS_ID}",
-                            url: "${MANIFEST_REPO}"
-                        ]]
-                    ])
+            checkout([
+                $class: 'GitSCM',
+                branches: [[name: "*/${MANIFEST_BRANCH}"]],
+                userRemoteConfigs: [[
+                    credentialsId: "${GIT_CREDENTIALS_ID}",
+                    url: "${MANIFEST_REPO}"
+                ]]
+            ])
 
-                    withCredentials([
-                        usernamePassword(
-                            credentialsId: "${GIT_CREDENTIALS_ID}",
-                            usernameVariable: 'GIT_USERNAME',
-                            passwordVariable: 'GIT_TOKEN'
-                        )
-                    ]) {
-                        sh """
-                            sed -i 's|image:.*|image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}|' manifests/deployment.yaml
+            sh """
+                sed -i 's|image:.*|image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}|' manifests/deployment.yaml
+            """
 
-                            git config user.name "imalfas"
-                            git config user.email "muhammadalfas9946@gmail.com"
+            withCredentials([
+                usernamePassword(
+                    credentialsId: "${GIT_CREDENTIALS_ID}",
+                    usernameVariable: 'GIT_USERNAME',
+                    passwordVariable: 'GIT_TOKEN'
+                )
+            ]) {
+                sh '''
+                    git config user.name "imalfas"
+                    git config user.email "muhammadalfas9946@gmail.com"
 
-                            git add manifests/deployment.yaml
+                    git add manifests/deployment.yaml
 
-                            if ! git diff --cached --quiet; then
-                                git commit -m "Update foodista image to ${env.BUILD_NUMBER}"
+                    if ! git diff --cached --quiet; then
+                        git commit -m "Update foodista image"
 
-                                git push https://\\${GIT_USERNAME}:\\${GIT_TOKEN}@github.com/imalfas/foodista.git HEAD:${MANIFEST_BRANCH}
-                            else
-                                echo "No manifest changes to commit"
-                            fi
-                        """
-                    }
-                }
+                        git -c credential.helper='!f() { echo username="$GIT_USERNAME"; echo password="$GIT_TOKEN"; }; f' push origin HEAD:main
+                    else
+                        echo "No manifest changes to commit"
+                    fi
+                '''
             }
         }
     }
-
+}
     post {
         success {
             echo 'Pipeline executed successfully! Docker image pushed and manifest updated.'
