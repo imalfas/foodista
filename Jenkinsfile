@@ -1,3 +1,4 @@
+
 pipeline {
     agent any
 
@@ -56,6 +57,8 @@ pipeline {
 
                             docker push ${DOCKER_IMAGE}:${env.BUILD_NUMBER}
                             docker push ${DOCKER_IMAGE}:latest
+
+                            docker logout
                         """
                     }
                 }
@@ -83,7 +86,7 @@ pipeline {
                         )
                     ]) {
                         sh """
-                           sed -i -E 's|(^[[:space:]]*image:[[:space:]]*).*$|\1'${DOCKER_IMAGE}:${env.BUILD_NUMBER}'|' manifests/deployment.yaml
+                            sed -i 's|image:.*|image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}|' manifests/deployment.yaml
 
                             git config user.name "imalfas"
                             git config user.email "muhammadalfas9946@gmail.com"
@@ -91,9 +94,9 @@ pipeline {
                             git add manifests/deployment.yaml
 
                             if ! git diff --cached --quiet; then
-                                git commit -m "Update maker image to ${env.BUILD_NUMBER}"
+                                git commit -m "Update foodista image to ${env.BUILD_NUMBER}"
 
-                                git push https://\${GIT_USERNAME}:\${GIT_TOKEN}@github.com/imalfas/foodista.git HEAD:${MANIFEST_BRANCH}
+                                git push https://\\${GIT_USERNAME}:\\${GIT_TOKEN}@github.com/imalfas/foodista.git HEAD:${MANIFEST_BRANCH}
                             else
                                 echo "No manifest changes to commit"
                             fi
@@ -106,11 +109,12 @@ pipeline {
 
     post {
         success {
-            echo 'Pipeline executed successfully! Manifest repo updated with new image tag.'
+            echo 'Pipeline executed successfully! Docker image pushed and manifest updated.'
         }
 
         failure {
-            echo 'Pipeline failed. Please review the stage logs above.'
+            echo 'Pipeline failed. Please check the console output.'
         }
     }
 }
+
