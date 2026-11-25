@@ -1,24 +1,15 @@
 
-FROM python:3.11-slim
+# Use lightweight Nginx image
+FROM nginx:alpine
 
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+# Set working directory
+WORKDIR /usr/share/nginx/html
 
-WORKDIR /app
+# Copy website files into Nginx web directory
+COPY . .
 
-# Install required Python packages
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir fastapi "uvicorn[standard]"
+# Expose HTTP port
+EXPOSE 80
 
-# Copy application files
-COPY . /app/
-
-# Create non-root user
-RUN adduser --disabled-password --gecos "" appuser && \
-    chown -R appuser:appuser /app
-
-USER appuser
-
-EXPOSE 8000
-
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Start Nginx in foreground
+CMD ["nginx", "-g", "daemon off;"]
