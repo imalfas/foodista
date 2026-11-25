@@ -83,7 +83,7 @@ pipeline {
                         )
                     ]) {
                         sh """
-                            sed -i 's|image: IMAGE_PLACEHOLDER|image: ${DOCKER_IMAGE}:${env.BUILD_NUMBER}|' manifests/deployment.yaml
+                           sed -i -E 's|(^[[:space:]]*image:[[:space:]]*).*$|\1'${DOCKER_IMAGE}:${env.BUILD_NUMBER}'|' manifests/deployment.yaml
 
                             git config user.name "imalfas"
                             git config user.email "muhammadalfas9946@gmail.com"
