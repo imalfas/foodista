@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
         - name: foodista
-          image: imalfas/foodista:5          # replaced by Jenkinsfile at deploy time
+          image: imalfas/foodista:5
           imagePullPolicy: Always
           ports:
             - containerPort: 80
